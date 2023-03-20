@@ -1,14 +1,19 @@
-const { google } = require('googleapis')
-const fs = require('fs')
-const formidable = require('formidable')
-const credentials = require('./credentials.json')
+import { google } from 'googleapis'
+import fs from 'fs'
+import formidable from 'formidable'
+import credentials from './credentials.json' assert {type: 'json'}
+// const { google } = require('googleapis')
+// const fs = require('fs')
+// const formidable = require('formidable')
+// const credentials = require('./credentials.json')
 const client_id = credentials.web.client_id
 const client_secret = credentials.web.client_secret
 const redirect_uris = credentials.web.redirect_uris
 const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0])
 const service = google.drive({ version: 'v3', auth: oAuth2Client })
 const SCOPE = ['https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/drive.file']
-
+// const open = require('open')
+import open from 'open'
 
 // INITIALIZATION Create folders and sub folders on first connect
 const createIndependaFolder = async() => {
@@ -84,6 +89,8 @@ const getAuthURL = (req, res) => {
         scope: SCOPE,
     })
 
+    open(authUrl)
+
     // const command = process.platform === 'win32' ? 'start' : process.platform === 'darwin' ? 'open' : 'xdg-open';
     // exec(`${command} ${authUrl}`, (error, stdout, stderr) => {
     //     if (error) {
@@ -93,10 +100,9 @@ const getAuthURL = (req, res) => {
     //     console.log(`stdout: ${stdout}`);
     //     console.error(`stderr: ${stderr}`);
     //   });
-
     console.log(authUrl)
-    
     res.send(authUrl)
+
 }
 
 const getToken = (req, res) => {
@@ -190,7 +196,7 @@ const deleteFile = (req, res) => {
     service.files.delete({ 'fileId': fileId }).then(response => { res.send(response.data)})
 }
 
-module.exports = {
+export {
     runServer,
     getAuthURL,
     getToken,

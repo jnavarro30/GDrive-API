@@ -1,8 +1,20 @@
-const express = require('express')
+// const express = require('express')
+import express from 'express'
+import cors from 'cors'
+import {
+    runServer,
+    getAuthURL,
+    getToken,
+    getUserInfo,
+    readDrive,
+    fileUpload,
+    deleteFile,
+    createTemplateFoldersOnUserDrive
+} from './controller.js'
 const app = express()
-const cors = require('cors')
+// const cors = require('cors')
 const PORT = process.env.PORT || 5000
-const controller = require('./controller')
+// const controller = require('./controller')
 
 const currentToken = {
     "access_token": "ya29.a0AVvZVsr4on0a-FW7XJ5VcS2Y2WROJYoC3tYfzbeZ5DK9B9Qus9Ve-UpHrQ6Z-TOfU3FuRMLbnVhfB-HZVxPmiC3F0vskX47-gw9pldXT9lV1L9qkmkCPuLP0v7W1nPiq6eexzZ-JGpX6aNH-Qj0ZC7bsUbyzaCgYKAXcSARISFQGbdwaIdAnJq_VztQa7wSq44pHgTg0163",
@@ -19,26 +31,26 @@ app.use(cors())
 app.use(express.urlencoded({ extended: false }))
 
 // TEST
-app.post('/createFolders', controller.createTemplateFoldersOnUserDrive)
+app.post('/createFolders', createTemplateFoldersOnUserDrive)
 // AUTHORIZATION
 app.get('/', (req, res) => {
     res.send('API Running...')
 })
 
-app.get('/getAuthURL', controller.getAuthURL)
+app.get('/getAuthURL', getAuthURL)
 
-app.post('/getToken', controller.getToken)
+app.post('/getToken', getToken)
 
 
 
 // ROUTES                              
-app.post('/getUserInfo', controller.getUserInfo)
+app.post('/getUserInfo', getUserInfo)
 
-app.post('/readDrive', controller.readDrive)
+app.post('/readDrive', readDrive)
 
-app.post('/fileUpload', controller.fileUpload)
+app.post('/fileUpload', fileUpload)
 
-app.post('/deleteFile/:id', controller.deleteFile)
+app.post('/deleteFile/:id', deleteFile)
 
 
 // SERVER
