@@ -1,168 +1,44 @@
 const express = require('express')
 const app = express()
 const cors = require('cors')
-const { google } = require('googleapis')
-const multer = require('multer')
-const fs = require('fs')
-const formidable = require('formidable')
-const credentials = require('./credentials.json')
 const PORT = process.env.PORT || 5000
+const controller = require('./controller')
 
-const client_id = credentials.web.client_id
-const client_secret = credentials.web.client_secret
-const redirect_uris = credentials.web.redirect_uris
-const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0])
-
-const SCOPE = ['https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/drive.file']
+const currentToken = {
+    "access_token": "ya29.a0AVvZVsr4on0a-FW7XJ5VcS2Y2WROJYoC3tYfzbeZ5DK9B9Qus9Ve-UpHrQ6Z-TOfU3FuRMLbnVhfB-HZVxPmiC3F0vskX47-gw9pldXT9lV1L9qkmkCPuLP0v7W1nPiq6eexzZ-JGpX6aNH-Qj0ZC7bsUbyzaCgYKAXcSARISFQGbdwaIdAnJq_VztQa7wSq44pHgTg0163",
+    "refresh_token": "1//06LnlTrLNYQu5CgYIARAAGAYSNwF-L9Ir2jtquCwqmdJ2929UG7fFWN_nMaOjsByDj8-A9x8TkwsfrzgYqLKzLCJsBZJVaYth4Z0",
+    "scope": "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.file",
+    "token_type": "Bearer",
+    "id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6Ijk4NmVlOWEzYjc1MjBiNDk0ZGY1NGZlMzJlM2U1YzRjYTY4NWM4OWQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI0NzI3OTgxMzY2ODAtNjZ1M2lzcTU5bjVkOTg1bXU4N3FhaTIzMHBmZzc5NnUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI0NzI3OTgxMzY2ODAtNjZ1M2lzcTU5bjVkOTg1bXU4N3FhaTIzMHBmZzc5NnUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTcwMDgwMzE0MjgyODk1NDM5MjEiLCJhdF9oYXNoIjoiMGhudkw4SlFJUzBMNTEzaWd6LTVUdyIsIm5hbWUiOiJKZXNzZSIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BR05teXhhNmlKdWc1TGVYM0p3ZFVpMzBTQTA4ODAydHZPVDFFcFlVemRPdD1zOTYtYyIsImdpdmVuX25hbWUiOiJKZXNzZSIsImxvY2FsZSI6ImVuIiwiaWF0IjoxNjc5Mjk3MDMwLCJleHAiOjE2NzkzMDA2MzB9.E6_WiICwrgAk6duihkjStwkW0v2aSzcEuCgb_Y6ElfMoeuxaxrj6tfbJa_sCuH7kY7X1RxRIe8GSYIgP0az5AipEi5KnVh-xF4H0JtKRdxmkQhWvQTl0QAjtaUmw6XgwO0E9fAfF509vhE5FM1eLsPRRjBB88ypfFZZQOmXBrkIZV9kzuCDfwKewyYZK86RmwSKqmJVT1FQ5UP58YxnTFTlvSCiXoY9su70k822_PsOrrmeV3g2Eo-ZmVrlXdqU2YVPdwWay0AU5fx8wajgEYECGxKzi1uJ8UjilG4nAQKfKDmugG9Hl9fcl-7_b3pruvArvrfCB5XMSr2fjn1Wuhw",
+    "expiry_date": 1679300629095
+}
 
 // MIDDLEWARE
 app.use(express.json())
 app.use(cors())
 app.use(express.urlencoded({ extended: false }))
 
-// SERVICES
-const createFolder = async() => {
-    const service = google.drive({ version: 'v3', auth: oAuth2Client })
-    const fileMetadata = {
-        name: 'Independa',
-        mimeType: 'application/vnd.google-apps.folder'
-    }
-
-    try {
-        const file = await service.files.create({
-            resource: fileMetadata,
-            fields: 'id',
-        })
-        console.log('Folder Id:', file.data.id)
-        return file.data.id
-    } catch (err) {
-        console.error(err)
-        throw err
-    }
-}
-
-const searchForFolder = async() => {
-    const service = google.drive({ version: 'v3', auth: oAuth2Client })
-    const files = []
-
-    try {
-        const res = await service.files.list({
-            q: 'mimeType=application/vnd.google-apps.folder',
-            space: 'drive'
-        })
-        console.log(res.files)
-        return res.files
-    } catch (err) {
-        console.error(err)
-    }
-}
-
-// ROUTES
+// TEST
+app.post('/createFolders', controller.createTemplateFoldersOnUserDrive)
+// AUTHORIZATION
 app.get('/', (req, res) => {
     res.send('API Running...')
 })
 
-app.get('/getAuthURL', (req, res) => {
-    const authUrl = oAuth2Client.generateAuthUrl({
-        access_type: 'offline',
-        scope: SCOPE
-    })
-    console.log(authUrl)
-    res.send(authUrl)
-})
+app.get('/getAuthURL', controller.getAuthURL)
 
-app.post('/getToken', (req, res) => {
-    if (req.body.code == null) return res.status(400).send('Invalid Request')
-    oAuth2Client.getToken(req.body.code, (err, token) => {
-        if (err) {
-            console.error('Error retrieving access token', err)
-            return res.status(400).send('Error retrieving access token')
-        }
-        res.send(token)
-    })
-})
+app.post('/getToken', controller.getToken)
 
-app.post('/getUserInfo', (req, res) => {
-    if (req.body.token == null) return res.status(400).send('Token not found')
-    oAuth2Client.setCredentials(req.body.token)
-    const oauth2 = google.oauth2({ version: 'v2', auth: oAuth2Client })
 
-    oauth2.userinfo.get((err, response) => {
-        if (err) res.status(400).send(err)
-        console.log(response.data)
-        res.send(response.data)
-    })
-})
 
-app.post('/readDrive', (req, res) => {
-    if (req.body.token == null) return res.status(400).send('Token not found')
-    oAuth2Client.setCredentials(req.body.token)
-    const drive = google.drive({ version: 'v3', auth: oAuth2Client })
-    drive.files.list({
-        pageSize: 10,
-    }, (err, response) => {
-        if (err) {
-            console.log('The API returned an error: ' + err)
-            return res.status(400).send(err)
-        }
-        const files = response.data.files
-        if (files.length) {
-            console.log(files)
-            files.map(file => {
-                console.log(`${file.name} (${file.id})`)
-            })
-        } else {
-            console.log('No files found.')
-        }
-        createFolder()
-        searchForFolder()
-        res.send(files)
-    })
-})
+// ROUTES                              
+app.post('/getUserInfo', controller.getUserInfo)
 
-app.post('/fileUpload', (req, res) => {
-    let form = new formidable.IncomingForm()
-    form.parse(req, (err, fields, files) => {
-        if (err) return res.status(400).send(err)
-        const token = JSON.parse(fields.token)
-        console.log(token)
-        if (token == null) return res.status(400).send('Token not found.')
-        oAuth2Client.setCredentials(token)
-        console.log(files.file)
-        const drive = google.drive({ version: 'v3', auth: oAuth2Client })
-        const fileMetadata = {
-            name: files.file.name
-        }
-        const media = {
-            mimeType: files.file.mimetype,
-            body: fs.createReadStream(files.file.filepath)
-        }
-        drive.files.create(
-            {
-               resource: fileMetadata,
-               media: media,
-               fields: 'id' 
-            },
-            (err, file) => {
-                oAuth2Client.setCredentials(null)
-                if (err) {
-                    console.error(err)
-                    res.status(400).send(err)
-                } else {
-                    res.send('Successful')
-                }
-            }
-        )
-    })
-})
+app.post('/readDrive', controller.readDrive)
 
-app.post('/deleteFile/:id', (req, res) => {
-    if (req.body.token == null) return res.status(400).send('Token not found.')
-    oAuth2Client.setCredentials(req.body.token)
-    const drive = google.drive({ version: 'v3', auth: oAuth2Client })
-    let fileId = req.params.id
-    drive.files.delete({ 'fileId': fileId }).then(response => { res.send(response.data)})
-})
+app.post('/fileUpload', controller.fileUpload)
+
+app.post('/deleteFile/:id', controller.deleteFile)
 
 
 // SERVER
